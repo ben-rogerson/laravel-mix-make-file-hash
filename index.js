@@ -35,4 +35,4 @@ const makeFileHash = (publicPath, manifestFilePath) => {
     });
 };
 
-module.exports.default = makeFileHash;
+module.exports = makeFileHash;
