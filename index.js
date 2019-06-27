@@ -1,13 +1,15 @@
-const forEach = require('lodash/forEach');
 const del = require('del');
+const fs = require("fs");
 const jsonFile = require('jsonfile');
+const forEach = require('lodash/forEach');
+const forIn = require('lodash/forIn');
 
 const makeFileHash = (publicPath, manifestFilePath) => {
     // Parse the mix-manifest file
     jsonFile.readFile(manifestFilePath, (err, obj) => {
         const newJson = {};
         const oldFiles = [];
-        _.forIn(obj, (value, key) => {
+        forIn(obj, (value, key) => {
             // Get the hash from the ?id= query string parameter and
             // move it into the file name e.g. 'app.abcd1234.css'
             const newFilename = value.replace(
