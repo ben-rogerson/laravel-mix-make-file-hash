@@ -1,0 +1,23 @@
+{
+  "name": "laravel-mix-make-file-hash",
+  "version": "1.0.0",
+  "description": "Convert the default Laravel Mix querystring hashing to filename hashing.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ben-rogerson/laravel-mix-make-file-hash.git"
+  },
+  "keywords": [],
+  "author": "Ben Rogerson <info@benrogerson.com.au> (https://benrogerson.com.au)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ben-rogerson/laravel-mix-make-file-hash/issues"
+  },
+  "homepage": "https://github.com/ben-rogerson/laravel-mix-make-file-hash#readme",
+  "dependencies": {
+    "lodash": "^4.17.11"
+  }
+}
