@@ -12,6 +12,12 @@ After mix has done it's thing, this script converts that querystring hashing to 
 (NEW) main.abcd1234.css
 ```
 
+## Installation
+
+```bash
+npm i -D laravel-mix-make-file-hash
+```
+
 ## Usage
 
 This is not a Laravel mix plugin so use with `mix.then()` like this:
