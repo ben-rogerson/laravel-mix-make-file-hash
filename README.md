@@ -41,7 +41,8 @@ if (mix.inProduction()) {
 ```js
 laravelMixMakeFileHash(
     publicPath,
-    manifestFilePath
+    manifestFilePath,
+    delSyncOptions = { force: true },
 )
 ```
 
