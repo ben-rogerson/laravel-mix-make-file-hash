@@ -1,49 +1,119 @@
-const del = require("del")
-const fs = require("fs")
-const jsonFile = require("jsonfile")
-const forEach = require("lodash/forEach")
-const forIn = require("lodash/forIn")
+const path = require("path");
+const del = require("del");
+const fs = require("fs");
+const { promisify } = require("util");
+const writeFile = promisify(fs.writeFile);
+const readFile = promisify(fs.readFile);
+const copyFile = promisify(fs.copyFile);
 
-const makeFileHash = (publicPath, manifestFilePath, delSyncOptions = {}) => {
-	const delOptions = { ...{ force: false }, ...delSyncOptions }
+const deleteStaleHashedFiles = async ({
+  manifest,
+  publicPath,
+  delOptions,
+  debug
+}) => {
+  for (let oldHash of Object.values(manifest)) {
+    // Create a glob pattern of all files with the new file naming style e.g. 'app.*.css'
+    const oldHashedFilePathsGlob = path
+      .join(publicPath, oldHash)
+      .replace(/([^.]+)\.([^?]+)\?id=(.+)$/g, "$1.*.$2");
+    const deletedPaths = await del(
+      [oldHashedFilePathsGlob],
+      delOptions
+    ).catch(error => console.error(error));
+    debug && console.debug(`Removed stale hashed file: ${deletedPaths}`);
+  }
+};
 
-	// Parse the mix-manifest file
-	jsonFile.readFile(manifestFilePath, (err, obj) => {
-		const newJson = {}
-		const oldFiles = []
-		forIn(obj, (value, key) => {
-			// Get the hash from the ?id= query string parameter and
-			// move it into the file name e.g. 'app.abcd1234.css'
-			const newFilename = value.replace(
-				/([^.]+)\.([^?]+)\?id=(.+)$/g,
-				"$1.$3.$2"
-			)
-			// Create a glob pattern of all files with the new file naming style e.g. 'app.*.css'
-			const oldAsGlob = value.replace(
-				/([^.]+)\.([^?]+)\?id=(.+)$/g,
-				"$1.*.$2"
-			)
-			// Delete old versioned file(s) that match the glob pattern
-			del.sync([`${publicPath}${oldAsGlob}`], delOptions)
-			// Copy as new versioned file name
-			fs.copyFile(
-				`${publicPath}${key}`,
-				`${publicPath}${newFilename}`,
-				err => {
-					err && console.error(err)
-				}
-			)
-			newJson[key] = newFilename
-			oldFiles.push(key)
-		})
-		forEach(oldFiles, key => {
-			del.sync([`${publicPath}${key}`], delOptions)
-		})
-		// Write the new contents of the mix manifest file
-		jsonFile.writeFile(manifestFilePath, newJson, { spaces: 4 }, err => {
-			if (err) console.error(err)
-		})
-	})
-}
+const getNewFilename = file =>
+  file.replace(/([^.]+)\.([^?]+)\?id=(.+)$/g, "$1.$3.$2");
 
-module.exports = makeFileHash
+const normalizeData = content => {
+  if (Buffer.isBuffer(content)) content = content.toString("utf8");
+  content = content.replace(/^\uFEFF/, "");
+  return content;
+};
+
+const standardizeArgs = args => {
+  if (typeof args[0] === "object") return args[0];
+  return {
+    publicPath: args[0],
+    manifestFilePath: args[1],
+    delOptions: args[3] || {}
+  };
+};
+
+const makeNewHashedFiles = async ({
+  manifest,
+  publicPath,
+  delOptions,
+  debug
+}) => {
+  const newJson = {};
+  for (let [oldNonHash, oldHash] of Object.entries(manifest)) {
+    const newFilePath = getNewFilename(path.join(publicPath, oldHash));
+    const oldFilePath = path.join(publicPath, oldNonHash);
+    await copyFile(oldFilePath, newFilePath).catch(error =>
+      console.error(error)
+    );
+    await del([oldFilePath], delOptions).catch(error => console.error(error));
+    debug &&
+      console.debug(
+        `Renamed '${oldFilePath}' to '${newFilePath}' (delOptions '${JSON.stringify(
+          delOptions
+        )}')`
+      );
+    newJson[oldNonHash] = getNewFilename(oldHash);
+  }
+  return newJson;
+};
+
+const writeNewManifest = async ({ manifestFilePath, newManifest, debug }) => {
+  const EOL = "\n";
+  const jsonManifest = JSON.stringify(newManifest, null, 4);
+  const formattedManifest = jsonManifest.replace(/\n/g, EOL) + EOL;
+  await writeFile(manifestFilePath, formattedManifest).catch(error =>
+    console.error(error)
+  );
+  debug &&
+    console.debug(
+      `Finished updating '${manifestFilePath}' with the new filenames:`,
+      JSON.parse(formattedManifest)
+    );
+  return JSON.parse(formattedManifest);
+};
+
+const makeFileHash = async (...args) => {
+  const { publicPath, manifestFilePath, delOptions, debug } = standardizeArgs(
+    args
+  );
+  if (!publicPath)
+    return console.error(`Error: 'Make file hash' needs a 'publicPath'!\n`);
+  if (!manifestFilePath)
+    return console.error(
+      `Error: 'Make file hash' needs a 'manifestFilePath'!\n`
+    );
+  const rawManifest = await readFile(manifestFilePath).catch(error =>
+    console.error(error)
+  );
+  const manifest = await JSON.parse(normalizeData(rawManifest));
+  debug && console.debug(`Manifest found in '${manifestFilePath}':`, manifest);
+
+  const delOptionsUnforced = { ...{ force: false }, ...delOptions }; // Don't force delete by default
+  await deleteStaleHashedFiles({
+    manifest,
+    publicPath,
+    delOptions: delOptionsUnforced,
+    debug
+  });
+  const newManifest = await makeNewHashedFiles({
+    manifest,
+    publicPath,
+    delOptions: delOptionsUnforced,
+    debug
+  });
+
+  return await writeNewManifest({ manifestFilePath, newManifest, debug });
+};
+
+module.exports = makeFileHash;
