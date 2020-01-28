@@ -10,7 +10,14 @@
     "type": "git",
     "url": "git+https://github.com/ben-rogerson/laravel-mix-make-file-hash.git"
   },
-  "keywords": [],
+  "keywords": [
+    "laravel",
+    "mix",
+    "hashing",
+    "hash",
+    "file",
+    "filehash"
+  ],
   "author": "Ben Rogerson <info@benrogerson.com.au> (https://benrogerson.com.au)",
   "license": "ISC",
   "bugs": {
