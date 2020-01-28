@@ -6,7 +6,7 @@ Example from `mix-manifest.json`:
 
 ```json
 {
-    "/dist/main.js": "/dist/main.js?id=1e70e7c11a9185f57e64"
+  "/dist/main.js": "/dist/main.js?id=1e70e7c11a9185f57e64"
 }
 ```
 
@@ -16,7 +16,7 @@ Instead, **"Laravel Mix make file hash" will move the hash into the filename of 
 
 ```json
 {
-    "/dist/main.js": "/dist/main.1e70e7c11a9185f57e64.js"
+  "/dist/main.js": "/dist/main.1e70e7c11a9185f57e64.js"
 }
 ```
 
@@ -31,7 +31,7 @@ To accomplish the re-hashing, this script will:
 5. Return the contents of the new manifest for further usage (if required).
 
 Turn on debug to activate noisy feedback:
- `{ debug: true }`
+`{ debug: true }`
 
 ## Installation
 
@@ -47,14 +47,14 @@ yarn add laravel-mix-make-file-hash -D
 
 ```js
 if (mix.inProduction()) {
-    mix.version()
-    mix.then(() => {
-        const convertToFileHash = require("laravel-mix-make-file-hash")
-        convertToFileHash({
-            publicPath: 'web',
-            manifestFilePath: 'web/mix-manifest.json',
-        })
-    })
+  mix.version();
+  mix.then(() => {
+    const convertToFileHash = require("laravel-mix-make-file-hash");
+    convertToFileHash({
+      publicPath: "web",
+      manifestFilePath: "web/mix-manifest.json"
+    });
+  });
 }
 ```
 
@@ -64,27 +64,47 @@ if (mix.inProduction()) {
 
 ```js
 if (mix.inProduction()) {
-    mix.version()
-    mix.then(async () => {
-        const convertToFileHash = require("laravel-mix-make-file-hash")
-        const fileHashedManifest = await convertToFileHash({
-            publicPath: 'web',
-            manifestFilePath: 'web/mix-manifest.json',
-        })
-        // Do something here...
-    })
+  mix.version();
+  mix.then(async () => {
+    const convertToFileHash = require("laravel-mix-make-file-hash");
+    const fileHashedManifest = await convertToFileHash({
+      publicPath: "web",
+      manifestFilePath: "web/mix-manifest.json"
+    });
+    // Do something here...
+  });
 }
 ```
 
 ## Options
 
+| Name                   | Type             | Default            | Description                                                                          |
+| ---------------------- | ---------------- | ------------------ | ------------------------------------------------------------------------------------ |
+| publicPath \*          | `string`         | `undefined`        | The path to your public folder (eg: `"web"`)                                         |
+| manifestFilePath \*    | `string`         | `undefined`        | The filePath to your mix-manifest.json<br /> (eg: `"web/mix-manifest.json"`)         |
+| fileTypesBlacklist     | `string`/`array` | `undefined`        | A list of filetypes to ignore re-hashing                                             |
+| keepBlacklistedEntries | `boolean`        | `false`            | Whether to keep blacklisted entries in the manifest                                  |
+| delOptions             | `object`         | `{ force: false }` | Options to provide to del - [See options](https://www.npmjs.com/package/del#options) |
+| debug                  | `boolean`        | `false`            | Debug exactly what's happening (or meant to happen) during runtime                   |
+
+\*&nbsp;= Required
+
+## Full config example
+
 ```js
-laravelMixMakeFileHash({
-    publicPath: 'web',
-    manifestFilePath: 'web/mix-manifest.json',
-    delSyncOptions: { force: true },
-    debug: false,
-})
+if (mix.inProduction()) {
+  mix.version();
+  mix.then(async () => {
+        const convertToFileHash = require("laravel-mix-make-file-hash");
+        convertToFileHash({
+            publicPath: "web",
+            manifestFilePath: "web/mix-manifest.json",
+            fileTypesBlacklist: ["html"],
+            keepBlacklistedEntries: true,
+            delOptions: { force: false },
+            debug: false
+        });
+  })
 ```
 
 ## Links
