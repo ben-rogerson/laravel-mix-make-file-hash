@@ -68,9 +68,24 @@ const makeNewHashedFiles = async ({
   return newJson;
 };
 
-const writeNewManifest = async ({ manifestFilePath, newManifest, debug }) => {
+const filterManifest = (manifest, fileTypesBlacklist) => {
+  if (!fileTypesBlacklist || fileTypesBlacklist.length === 0)
+    return { filteredManifest: manifest };
+  let removedLines;
+  let filteredManifest;
+  Object.entries(manifest).forEach(([key, val]) => {
+    const fileType = key.split(".").pop();
+    if (fileTypesBlacklist.includes(fileType)) {
+      return (removedLines = { ...removedLines, [key]: val });
+    }
+    filteredManifest = { ...filteredManifest, [key]: val };
+  });
+  return { filteredManifest, removedLines };
+};
+
+const writeManifest = async ({ manifestFilePath, manifest, debug }) => {
   const EOL = "\n";
-  const jsonManifest = JSON.stringify(newManifest, null, 4);
+  const jsonManifest = JSON.stringify(manifest, null, 4);
   const formattedManifest = jsonManifest.replace(/\n/g, EOL) + EOL;
   await writeFile(manifestFilePath, formattedManifest).catch(error =>
     console.error(error)
@@ -84,9 +99,14 @@ const writeNewManifest = async ({ manifestFilePath, newManifest, debug }) => {
 };
 
 const makeFileHash = async (...args) => {
-  const { publicPath, manifestFilePath, delOptions, debug } = standardizeArgs(
-    args
-  );
+  const {
+    publicPath,
+    manifestFilePath,
+    fileTypesBlacklist,
+    delOptions,
+    keepBlacklistedEntries = false,
+    debug
+  } = standardizeArgs(args);
   if (!publicPath)
     return console.error(`Error: 'Make file hash' needs a 'publicPath'!\n`);
   if (!manifestFilePath)
@@ -97,9 +117,24 @@ const makeFileHash = async (...args) => {
     console.error(error)
   );
   const manifest = await JSON.parse(normalizeData(rawManifest));
-  debug && console.debug(`Manifest found in '${manifestFilePath}':`, manifest);
-
-  const delOptionsUnforced = { ...{ force: false }, ...delOptions }; // Don't force delete by default
+  debug && console.debug(`Manifest found: '${manifestFilePath}'`);
+  const { filteredManifest, removedLines } = filterManifest(
+    manifest,
+    fileTypesBlacklist
+  );
+  debug &&
+    removedLines &&
+    keepBlacklistedEntries &&
+    console.debug(`Files that will not be re-hashed:\n`, removedLines);
+  debug &&
+    removedLines &&
+    !keepBlacklistedEntries &&
+    console.debug(`Files removed from manifest:\n`, removedLines);
+  // Don't force delete by default
+  const delOptionsUnforced = {
+    ...{ force: false },
+    ...delOptions
+  };
   await deleteStaleHashedFiles({
     manifest,
     publicPath,
@@ -107,13 +142,20 @@ const makeFileHash = async (...args) => {
     debug
   });
   const newManifest = await makeNewHashedFiles({
-    manifest,
+    manifest: filteredManifest,
     publicPath,
     delOptions: delOptionsUnforced,
     debug
   });
-
-  return await writeNewManifest({ manifestFilePath, newManifest, debug });
+  const combinedManifest =
+    keepBlacklistedEntries && removedLines
+      ? { ...newManifest, ...removedLines }
+      : newManifest;
+  return await writeManifest({
+    manifest: combinedManifest,
+    manifestFilePath,
+    debug
+  });
 };
 
 module.exports = makeFileHash;
