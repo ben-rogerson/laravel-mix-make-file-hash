@@ -13,7 +13,7 @@ const deleteStaleHashedFiles = async ({
   debug
 }) => {
   for (let oldHash of Object.values(manifest)) {
-    // Create a glob pattern of all files with the new file naming style e.g. 'app.*.css'
+    // A glob pattern of all files with the new file naming style e.g. 'app.*.css'
     const oldHashedFilePathsGlob = path
       .join(publicPath, oldHash)
       .replace(/([^.]+)\.([^?]+)\?id=(.+)$/g, "$1.*.$2");
@@ -21,7 +21,11 @@ const deleteStaleHashedFiles = async ({
       [oldHashedFilePathsGlob],
       delOptions
     ).catch(error => console.error(error));
-    debug && console.debug(`Removed stale hashed file: ${deletedPaths}`);
+    debug &&
+      deletedPaths.length &&
+      console.debug(
+        `Removed stale hash files: ${oldHashedFilePathsGlob} (${deletedPaths})`
+      );
   }
 };
 
@@ -34,14 +38,14 @@ const normalizeData = content => {
   return content;
 };
 
-const standardizeArgs = args => {
-  if (typeof args[0] === "object") return args[0];
-  return {
-    publicPath: args[0],
-    manifestFilePath: args[1],
-    delOptions: args[3] || {}
-  };
-};
+const standardizeArgs = args =>
+  typeof args[0] === "object"
+    ? args[0]
+    : {
+        publicPath: args[0],
+        manifestFilePath: args[1],
+        delOptions: args[3] || {}
+      };
 
 const makeNewHashedFiles = async ({
   manifest,
@@ -92,7 +96,7 @@ const writeManifest = async ({ manifestFilePath, manifest, debug }) => {
   );
   debug &&
     console.debug(
-      `Finished updating '${manifestFilePath}' with the new filenames:`,
+      `Finished updating '${manifestFilePath}' with the new filenames:\n`,
       JSON.parse(formattedManifest)
     );
   return JSON.parse(formattedManifest);
