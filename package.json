@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/ben-rogerson/laravel-mix-make-file-hash#readme",
   "dependencies": {
-    "del": "^5.1.0"
+    "del": "^5.1.0",
+    "micromatch": "^4.0.2"
   }
 }

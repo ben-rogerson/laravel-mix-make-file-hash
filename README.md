@@ -82,7 +82,7 @@ if (mix.inProduction()) {
 | ---------------------- | ---------------- | ------------------ | ------------------------------------------------------------------------------------ |
 | publicPath \*          | `string`         | `undefined`        | The path to your public folder (eg: `"web"`)                                         |
 | manifestFilePath \*    | `string`         | `undefined`        | The filePath to your mix-manifest.json<br /> (eg: `"web/mix-manifest.json"`)         |
-| fileTypesBlacklist     | `string`/`array` | `undefined`        | A list of filetypes to ignore re-hashing                                             |
+| blacklist              | `string`/`array` | `undefined`        | A glob pattern of files to ignore re-hashing                                         |
 | keepBlacklistedEntries | `boolean`        | `false`            | Whether to keep blacklisted entries in the manifest                                  |
 | delOptions             | `object`         | `{ force: false }` | Options to provide to del - [See options](https://www.npmjs.com/package/del#options) |
 | debug                  | `boolean`        | `false`            | Debug exactly what's happening (or meant to happen) during runtime                   |
@@ -99,7 +99,7 @@ if (mix.inProduction()) {
         convertToFileHash({
             publicPath: "web",
             manifestFilePath: "web/mix-manifest.json",
-            fileTypesBlacklist: ["html"],
+            blacklist: ["html", "main.js"],
             keepBlacklistedEntries: true,
             delOptions: { force: false },
             debug: false

@@ -1,6 +1,7 @@
 const path = require("path");
 const del = require("del");
 const fs = require("fs");
+const micromatch = require("micromatch");
 const { promisify } = require("util");
 const writeFile = promisify(fs.writeFile);
 const readFile = promisify(fs.readFile);
@@ -54,6 +55,7 @@ const makeNewHashedFiles = async ({
   debug
 }) => {
   const newJson = {};
+  if (!manifest) return newJson;
   for (let [oldNonHash, oldHash] of Object.entries(manifest)) {
     const newFilePath = getNewFilename(path.join(publicPath, oldHash));
     const oldFilePath = path.join(publicPath, oldNonHash);
@@ -72,14 +74,13 @@ const makeNewHashedFiles = async ({
   return newJson;
 };
 
-const filterManifest = (manifest, fileTypesBlacklist) => {
-  if (!fileTypesBlacklist || fileTypesBlacklist.length === 0)
+const filterManifest = (manifest, blacklist) => {
+  if (!blacklist || blacklist.length === 0)
     return { filteredManifest: manifest };
   let removedLines;
   let filteredManifest;
   Object.entries(manifest).forEach(([key, val]) => {
-    const fileType = key.split(".").pop();
-    if (fileTypesBlacklist.includes(fileType)) {
+    if (micromatch.contains(key, blacklist)) {
       return (removedLines = { ...removedLines, [key]: val });
     }
     filteredManifest = { ...filteredManifest, [key]: val };
@@ -107,6 +108,7 @@ const makeFileHash = async (...args) => {
     publicPath,
     manifestFilePath,
     fileTypesBlacklist,
+    blacklist,
     delOptions,
     keepBlacklistedEntries = false,
     debug
@@ -124,7 +126,7 @@ const makeFileHash = async (...args) => {
   debug && console.debug(`Manifest found: '${manifestFilePath}'`);
   const { filteredManifest, removedLines } = filterManifest(
     manifest,
-    fileTypesBlacklist
+    blacklist || fileTypesBlacklist
   );
   debug &&
     removedLines &&
