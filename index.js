@@ -52,6 +52,7 @@ const makeNewHashedFiles = async ({
   manifest,
   publicPath,
   delOptions,
+  disableFileOperations,
   debug
 }) => {
   const newJson = {};
@@ -59,16 +60,18 @@ const makeNewHashedFiles = async ({
   for (let [oldNonHash, oldHash] of Object.entries(manifest)) {
     const newFilePath = getNewFilename(path.join(publicPath, oldHash));
     const oldFilePath = path.join(publicPath, oldNonHash);
-    await copyFile(oldFilePath, newFilePath).catch(error =>
-      console.error(error)
-    );
-    await del([oldFilePath], delOptions).catch(error => console.error(error));
-    debug &&
+    if (!disableFileOperations) {
+      await copyFile(oldFilePath, newFilePath).catch(error =>
+        console.error(error)
+      );
+      await del([oldFilePath], delOptions).catch(error => console.error(error));
+      debug &&
       console.debug(
         `Renamed '${oldFilePath}' to '${newFilePath}' (delOptions '${JSON.stringify(
           delOptions
         )}')`
       );
+    }
     newJson[oldNonHash] = getNewFilename(oldHash);
   }
   return newJson;
@@ -111,7 +114,8 @@ const makeFileHash = async (...args) => {
     blacklist,
     delOptions,
     keepBlacklistedEntries = false,
-    debug
+    disableFileOperations = false,
+    debug,
   } = standardizeArgs(args);
   if (!publicPath)
     return console.error(`Error: 'Make file hash' needs a 'publicPath'!\n`);
@@ -141,16 +145,19 @@ const makeFileHash = async (...args) => {
     ...{ force: false },
     ...delOptions
   };
-  await deleteStaleHashedFiles({
-    manifest,
-    publicPath,
-    delOptions: delOptionsUnforced,
-    debug
-  });
+  if (!disableFileOperations) {
+    await deleteStaleHashedFiles({
+      manifest,
+      publicPath,
+      delOptions: delOptionsUnforced,
+      debug
+    });
+  }
   const newManifest = await makeNewHashedFiles({
     manifest: filteredManifest,
     publicPath,
     delOptions: delOptionsUnforced,
+    disableFileOperations,
     debug
   });
   const combinedManifest =
