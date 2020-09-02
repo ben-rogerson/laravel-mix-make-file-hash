@@ -65,13 +65,13 @@ const makeNewHashedFiles = async ({
         console.error(error)
       );
       await del([oldFilePath], delOptions).catch(error => console.error(error));
-      debug &&
+    }
+    debug &&
       console.debug(
         `Renamed '${oldFilePath}' to '${newFilePath}' (delOptions '${JSON.stringify(
           delOptions
         )}')`
       );
-    }
     newJson[oldNonHash] = getNewFilename(oldHash);
   }
   return newJson;
