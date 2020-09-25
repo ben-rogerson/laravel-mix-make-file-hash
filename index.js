@@ -17,7 +17,7 @@ const deleteStaleHashedFiles = async ({
     // A glob pattern of all files with the new file naming style e.g. 'app.*.css'
     const oldHashedFilePathsGlob = path
       .join(publicPath, oldHash)
-      .replace(/([^.]+)\.([^?]+)\?id=(.+)$/g, "$1.*.$2");
+      .replace(/(.)\.([^?]+)\?id=(.+)$/g, "$1.*.$2");
     const deletedPaths = await del(
       [oldHashedFilePathsGlob],
       delOptions
@@ -31,7 +31,7 @@ const deleteStaleHashedFiles = async ({
 };
 
 const getNewFilename = file =>
-  file.replace(/([^.]+)\.([^?]+)\?id=(.+)$/g, "$1.$3.$2");
+  file.replace(/(.+)\.([^?]+)\?id=(.+)$/g, "$1.$3.$2");
 
 const normalizeData = content => {
   if (Buffer.isBuffer(content)) content = content.toString("utf8");
