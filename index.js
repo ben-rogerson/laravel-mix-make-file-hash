@@ -17,7 +17,7 @@ const deleteStaleHashedFiles = async ({
     // A glob pattern of all files with the new file naming style e.g. 'app.*.css'
     const oldHashedFilePathsGlob = path
       .join(publicPath, oldHash)
-      .replace(/(.)\.([^?]+)\?id=(.+)$/g, "$1.*.$2");
+      .replace(/(.+)\.([^?]+)\?id=(.+)$/g, "$1.*.$2");
     const deletedPaths = await del(
       [oldHashedFilePathsGlob],
       delOptions
