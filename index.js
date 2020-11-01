@@ -115,7 +115,7 @@ const makeFileHash = async (...args) => {
     delOptions,
     keepBlacklistedEntries = false,
     disableFileOperations = false,
-    debug,
+    debug
   } = standardizeArgs(args);
   if (!publicPath)
     return console.error(`Error: 'Make file hash' needs a 'publicPath'!\n`);
@@ -123,6 +123,11 @@ const makeFileHash = async (...args) => {
     return console.error(
       `Error: 'Make file hash' needs a 'manifestFilePath'!\n`
     );
+  if (disableFileOperations) {
+    console.log(
+      `Note: File changes have been disabled with “disableFileOperations”. Only the mix-manifest.json will be updated.\n`
+    );
+  }
   const rawManifest = await readFile(manifestFilePath).catch(error =>
     console.error(error)
   );
