@@ -86,6 +86,7 @@ if (mix.inProduction()) {
 | keepBlacklistedEntries | `boolean`        | `false`            | Whether to keep blacklisted entries in the manifest                                  |
 | delOptions             | `object`         | `{ force: false }` | Options to provide to del - [See options](https://www.npmjs.com/package/del#options) |
 | debug                  | `boolean`        | `false`            | Debug exactly what's happening (or meant to happen) during runtime                   |
+| disableFileOperations  | `boolean`        | `false`            | Only update the manifest. No copying or deleting of files. Pretty much a dry run.    |
 
 \*&nbsp;= Required
 
