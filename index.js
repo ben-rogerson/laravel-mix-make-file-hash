@@ -53,6 +53,7 @@ const makeNewHashedFiles = async ({
   publicPath,
   delOptions,
   disableFileOperations,
+  keepUnhashedFiles,
   debug
 }) => {
   const newJson = {};
@@ -64,7 +65,7 @@ const makeNewHashedFiles = async ({
       await copyFile(oldFilePath, newFilePath).catch(error =>
         console.error(error)
       );
-      await del([oldFilePath], delOptions).catch(error => console.error(error));
+      !keepUnhashedFiles && await del([oldFilePath], delOptions).catch(error => console.error(error));
     }
     debug &&
       console.debug(
@@ -115,6 +116,7 @@ const makeFileHash = async (...args) => {
     delOptions,
     keepBlacklistedEntries = false,
     disableFileOperations = false,
+    keepUnhashedFiles = false,
     debug
   } = standardizeArgs(args);
   if (!publicPath)
@@ -163,6 +165,7 @@ const makeFileHash = async (...args) => {
     publicPath,
     delOptions: delOptionsUnforced,
     disableFileOperations,
+    keepUnhashedFiles,
     debug
   });
   const combinedManifest =
